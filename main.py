@@ -1,3 +1,4 @@
-from ui.navigation import start_application
+from ui.login import open_login
 
-start_application()
+if __name__ == "__main__":
+    open_login()

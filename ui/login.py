@@ -1,11 +1,11 @@
 import customtkinter as ctk
 import mysql.connector
 import bcrypt
+from ui.navigation import open_register, open_dashboard
 
 from tkinter import messagebox
 from database.db_connection import connect_db
-from ui.dashboard import app as dashboard_app
-from ui.register import open_register_window
+
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -59,8 +59,9 @@ def login_user():
                 f"Welcome {full_name}"
             )
 
-            app.destroy()  # Login window close
-            dashboard_app.mainloop()  # Dashboard window open
+            app.destroy()
+            open_dashboard()
+            # Dashboard window open
 
         else:
             messagebox.showerror(
@@ -81,9 +82,7 @@ def login_user():
 
 
 
-def open_register():
-    app.destroy()
-    open_register_window()
+
 
 app = ctk.CTk()
 app.title("LLM-Based Conversational Financial Advisor")
@@ -138,9 +137,11 @@ register_button = ctk.CTkButton(
     login_frame,
     text="Create New Account",
     width=180,
-    command=open_register
+    command=lambda: (
+        app.destroy(),
+        open_register()
+    )
 )
-
 register_button.grid(
     row=3,
     column=0,
@@ -149,3 +150,5 @@ register_button.grid(
 )
 def open_login():
     app.mainloop()
+    if __name__ == "__main__":
+        app.mainloop()

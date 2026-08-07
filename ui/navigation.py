@@ -1,5 +1,14 @@
-from ui.login import app as login_app
+import subprocess
+import os
 
 
-def start_application():
-    login_app.mainloop()
+def open_login():
+    subprocess.Popen(["python", os.path.join("ui", "login.py")])
+
+
+def open_register():
+    subprocess.Popen(["python", os.path.join("ui", "register.py")])
+
+
+def open_dashboard():
+    subprocess.Popen(["python", os.path.join("ui", "dashboard.py")])

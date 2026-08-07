@@ -4,6 +4,7 @@ from database.db_connection import connect_db
 from tkinter import messagebox
 from datetime import datetime
 import bcrypt
+from ui.navigation import open_login
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -89,6 +90,9 @@ def register_user():
         dob_entry.delete(0, "end")
         income_entry.delete(0, "end")
         savings_entry.delete(0, "end")
+
+        app.destroy()
+        open_login()
 
     except mysql.connector.IntegrityError:
         messagebox.showerror(
@@ -239,4 +243,6 @@ register_button = ctk.CTkButton(
 register_button.grid(row=8, column=0, columnspan=2, pady=30)
 def open_register_window():
     app.mainloop()
+    if __name__ == "__main__":
+        app.mainloop()
 
