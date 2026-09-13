@@ -16,11 +16,25 @@ ctk.set_default_color_theme("blue")
 
 
 # =========================================================
+# COLORS
+# =========================================================
+
+BG_COLOR = "#0B1120"
+CARD_COLOR = "#111827"
+INPUT_COLOR = "#1F2937"
+TEXT_COLOR = "#F9FAFB"
+SECONDARY_TEXT = "#9CA3AF"
+ACCENT_COLOR = "#2563EB"
+ACCENT_HOVER = "#1D4ED8"
+BORDER_COLOR = "#374151"
+SUCCESS_COLOR = "#22C55E"
+
+
+# =========================================================
 # REGISTER USER
 # =========================================================
 
 def register_user():
-    print("REGISTER BUTTON CLICKED")
 
     # Get values
     full_name = name_entry.get().strip()
@@ -32,8 +46,9 @@ def register_user():
     income = income_entry.get().strip()
     savings = savings_entry.get().strip()
 
+
     # -----------------------------------------------------
-    # VALIDATION
+    # REQUIRED FIELDS
     # -----------------------------------------------------
 
     fields = {
@@ -55,18 +70,24 @@ def register_user():
 
     if empty_fields:
         messagebox.showerror(
-            "Error",
-            "Please fill these fields:\n\n" + "\n".join(empty_fields)
+            "Missing Information",
+            "Please fill these fields:\n\n" +
+            "\n".join(empty_fields)
         )
         return
 
-    # Password confirmation
+
+    # -----------------------------------------------------
+    # PASSWORD CONFIRMATION
+    # -----------------------------------------------------
+
     if password != confirm_password:
         messagebox.showerror(
-            "Error",
+            "Password Error",
             "Passwords do not match!"
         )
         return
+
 
     # -----------------------------------------------------
     # DATE VALIDATION
@@ -82,11 +103,11 @@ def register_user():
     except ValueError:
 
         messagebox.showerror(
-            "Error",
+            "Invalid Date",
             "Date of Birth must be in DD-MM-YYYY format."
         )
-
         return
+
 
     # -----------------------------------------------------
     # INCOME VALIDATION
@@ -98,7 +119,7 @@ def register_user():
 
         if income_value <= 0:
             messagebox.showerror(
-                "Error",
+                "Invalid Income",
                 "Monthly income must be greater than 0."
             )
             return
@@ -106,11 +127,11 @@ def register_user():
     except ValueError:
 
         messagebox.showerror(
-            "Error",
+            "Invalid Income",
             "Monthly income must be a valid number."
         )
-
         return
+
 
     # -----------------------------------------------------
     # SAVINGS VALIDATION
@@ -122,14 +143,14 @@ def register_user():
 
         if savings_value < 0:
             messagebox.showerror(
-                "Error",
+                "Invalid Savings",
                 "Monthly savings cannot be negative."
             )
             return
 
         if savings_value > income_value:
             messagebox.showerror(
-                "Error",
+                "Invalid Savings",
                 "Monthly savings cannot be greater than income."
             )
             return
@@ -137,11 +158,11 @@ def register_user():
     except ValueError:
 
         messagebox.showerror(
-            "Error",
+            "Invalid Savings",
             "Monthly savings must be a valid number."
         )
-
         return
+
 
     # -----------------------------------------------------
     # HASH PASSWORD
@@ -152,12 +173,10 @@ def register_user():
         bcrypt.gensalt()
     ).decode("utf-8")
 
-    # -----------------------------------------------------
-    # DATABASE VARIABLES
-    # -----------------------------------------------------
 
     connection = None
     cursor = None
+
 
     # -----------------------------------------------------
     # DATABASE INSERT
@@ -173,7 +192,6 @@ def register_user():
                 "Database Error",
                 "Database connection failed!"
             )
-
             return
 
         cursor = connection.cursor()
@@ -202,15 +220,10 @@ def register_user():
             savings_value
         )
 
-        cursor.execute(
-            query,
-            values
-        )
+        cursor.execute(query, values)
 
-        # VERY IMPORTANT
         connection.commit()
 
-        # Get newly created user ID
         new_user_id = cursor.lastrowid
 
         print("--------------------------------")
@@ -222,10 +235,12 @@ def register_user():
         print("--------------------------------")
 
         messagebox.showinfo(
-            "Success",
+            "Account Created",
             f"Registration Successful!\n\n"
+            f"Welcome, {full_name}!\n\n"
             f"Your User ID is: {new_user_id}"
         )
+
 
         # -------------------------------------------------
         # CLEAR FORM
@@ -240,12 +255,14 @@ def register_user():
         income_entry.delete(0, "end")
         savings_entry.delete(0, "end")
 
+
         # -------------------------------------------------
         # GO TO LOGIN
         # -------------------------------------------------
 
         app.destroy()
         open_login()
+
 
     except mysql.connector.IntegrityError as e:
 
@@ -256,6 +273,7 @@ def register_user():
             "Email or Phone Number already exists."
         )
 
+
     except mysql.connector.Error as e:
 
         print("MYSQL ERROR:", repr(e))
@@ -264,6 +282,7 @@ def register_user():
             "Database Error",
             f"MySQL Error:\n{e}"
         )
+
 
     except Exception as e:
 
@@ -274,6 +293,7 @@ def register_user():
             f"Something went wrong:\n{e}"
         )
 
+
     finally:
 
         if cursor is not None:
@@ -281,6 +301,16 @@ def register_user():
 
         if connection is not None:
             connection.close()
+
+
+# =========================================================
+# BACK TO LOGIN
+# =========================================================
+
+def go_to_login():
+
+    app.destroy()
+    open_login()
 
 
 # =========================================================
@@ -293,35 +323,270 @@ app.title(
     "LLM-Based Conversational Financial Advisor"
 )
 
-app.geometry("900x650")
+app.geometry("1100x720")
+app.minsize(850, 600)
 
-
-# =========================================================
-# TITLE
-# =========================================================
-
-title = ctk.CTkLabel(
-    app,
-    text="User Registration",
-    font=("Arial", 28, "bold")
+app.configure(
+    fg_color=BG_COLOR
 )
 
-title.pack(pady=20)
+
+# =========================================================
+# MAIN CONTAINER
+# =========================================================
+
+main_frame = ctk.CTkFrame(
+    app,
+    fg_color=BG_COLOR
+)
+
+main_frame.pack(
+    fill="both",
+    expand=True,
+    padx=25,
+    pady=20
+)
+
+main_frame.grid_columnconfigure(0, weight=1)
+main_frame.grid_columnconfigure(1, weight=1)
+main_frame.grid_rowconfigure(0, weight=1)
 
 
 # =========================================================
-# FORM FRAME
+# LEFT BRANDING SECTION
+# =========================================================
+
+left_frame = ctk.CTkFrame(
+    main_frame,
+    fg_color=BG_COLOR,
+    corner_radius=0
+)
+
+left_frame.grid(
+    row=0,
+    column=0,
+    sticky="nsew",
+    padx=(15, 25),
+    pady=10
+)
+
+
+# ---------------------------------------------------------
+# LOGO
+# ---------------------------------------------------------
+
+logo = ctk.CTkLabel(
+    left_frame,
+    text="💰",
+    font=("Segoe UI Emoji", 50)
+)
+
+logo.pack(
+    pady=(50, 12)
+)
+
+
+# ---------------------------------------------------------
+# APP NAME
+# ---------------------------------------------------------
+
+brand_title = ctk.CTkLabel(
+    left_frame,
+    text="FinVest AI",
+    font=("Arial", 34, "bold"),
+    text_color=TEXT_COLOR
+)
+
+brand_title.pack(
+    pady=(0, 8)
+)
+
+
+# ---------------------------------------------------------
+# TAGLINE
+# ---------------------------------------------------------
+
+brand_subtitle = ctk.CTkLabel(
+    left_frame,
+    text="Your Smart Financial Companion",
+    font=("Arial", 16, "bold"),
+    text_color=ACCENT_COLOR
+)
+
+brand_subtitle.pack(
+    pady=(0, 22)
+)
+
+
+# ---------------------------------------------------------
+# DESCRIPTION
+# ---------------------------------------------------------
+
+description = ctk.CTkLabel(
+    left_frame,
+    text=(
+        "Create your account and take control\n"
+        "of your financial journey.\n\n"
+        "Track expenses, manage goals and get\n"
+        "AI-powered financial guidance."
+    ),
+    font=("Arial", 14),
+    text_color=SECONDARY_TEXT,
+    justify="center"
+)
+
+description.pack(
+    pady=8
+)
+
+
+# ---------------------------------------------------------
+# FEATURES
+# ---------------------------------------------------------
+
+features_frame = ctk.CTkFrame(
+    left_frame,
+    fg_color=CARD_COLOR,
+    corner_radius=16,
+    border_width=1,
+    border_color=BORDER_COLOR
+)
+
+features_frame.pack(
+    fill="x",
+    padx=10,
+    pady=35
+)
+
+
+features_title = ctk.CTkLabel(
+    features_frame,
+    text="Why create an account?",
+    font=("Arial", 15, "bold"),
+    text_color=TEXT_COLOR
+)
+
+features_title.pack(
+    anchor="w",
+    padx=18,
+    pady=(16, 10)
+)
+
+
+features = [
+    "✓  Track your daily expenses",
+    "✓  Set and monitor investment goals",
+    "✓  Analyze your financial habits",
+    "✓  Get personalized AI guidance"
+]
+
+for feature in features:
+
+    label = ctk.CTkLabel(
+        features_frame,
+        text=feature,
+        font=("Arial", 13),
+        text_color=SECONDARY_TEXT,
+        anchor="w"
+    )
+
+    label.pack(
+        anchor="w",
+        padx=18,
+        pady=5
+    )
+
+
+ctk.CTkLabel(
+    features_frame,
+    text="",
+    height=8
+).pack()
+
+
+# =========================================================
+# RIGHT REGISTRATION CARD
+# =========================================================
+
+right_frame = ctk.CTkFrame(
+    main_frame,
+    fg_color=CARD_COLOR,
+    corner_radius=20,
+    border_width=1,
+    border_color=BORDER_COLOR
+)
+
+right_frame.grid(
+    row=0,
+    column=1,
+    sticky="nsew",
+    padx=(5, 5),
+    pady=0
+)
+
+
+# =========================================================
+# REGISTRATION HEADER
+# =========================================================
+
+register_title = ctk.CTkLabel(
+    right_frame,
+    text="Create Account",
+    font=("Arial", 27, "bold"),
+    text_color=TEXT_COLOR
+)
+
+register_title.pack(
+    pady=(20, 3)
+)
+
+
+register_subtitle = ctk.CTkLabel(
+    right_frame,
+    text="Start your smarter financial journey",
+    font=("Arial", 12),
+    text_color=SECONDARY_TEXT
+)
+
+register_subtitle.pack(
+    pady=(0, 12)
+)
+
+
+# =========================================================
+# SCROLLABLE FORM
+# =========================================================
+
+scroll_container = ctk.CTkScrollableFrame(
+    right_frame,
+    fg_color="transparent",
+    scrollbar_fg_color=CARD_COLOR,
+    scrollbar_button_color=BORDER_COLOR,
+    scrollbar_button_hover_color=ACCENT_COLOR
+)
+
+scroll_container.pack(
+    fill="both",
+    expand=True,
+    padx=18,
+    pady=(0, 10)
+)
+
+
+# =========================================================
+# FORM
 # =========================================================
 
 form_frame = ctk.CTkFrame(
-    app,
-    width=550,
-    height=500
+    scroll_container,
+    fg_color="transparent"
 )
 
-form_frame.pack(pady=10)
-
-form_frame.pack_propagate(False)
+form_frame.pack(
+    fill="x",
+    padx=15,
+    pady=5
+)
 
 
 # =========================================================
@@ -331,28 +596,31 @@ form_frame.pack_propagate(False)
 name_label = ctk.CTkLabel(
     form_frame,
     text="Full Name",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-name_label.grid(
-    row=0,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+name_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 name_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
-    placeholder_text="Enter your full name"
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Enter your full name",
+    text_color=TEXT_COLOR
 )
 
-name_entry.grid(
-    row=0,
-    column=1,
-    padx=20,
-    pady=12
+name_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -362,29 +630,32 @@ name_entry.grid(
 
 email_label = ctk.CTkLabel(
     form_frame,
-    text="Email",
-    font=("Arial", 16)
+    text="Email Address",
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-email_label.grid(
-    row=1,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+email_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 email_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
-    placeholder_text="Enter your email"
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Enter your email",
+    text_color=TEXT_COLOR
 )
 
-email_entry.grid(
-    row=1,
-    column=1,
-    padx=20,
-    pady=12
+email_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -395,28 +666,31 @@ email_entry.grid(
 phone_label = ctk.CTkLabel(
     form_frame,
     text="Phone Number",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-phone_label.grid(
-    row=2,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+phone_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 phone_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
-    placeholder_text="Enter phone number"
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Enter phone number",
+    text_color=TEXT_COLOR
 )
 
-phone_entry.grid(
-    row=2,
-    column=1,
-    padx=20,
-    pady=12
+phone_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -427,29 +701,32 @@ phone_entry.grid(
 password_label = ctk.CTkLabel(
     form_frame,
     text="Password",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-password_label.grid(
-    row=3,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+password_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 password_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Create a password",
     show="*",
-    placeholder_text="Enter password"
+    text_color=TEXT_COLOR
 )
 
-password_entry.grid(
-    row=3,
-    column=1,
-    padx=20,
-    pady=12
+password_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -460,29 +737,32 @@ password_entry.grid(
 confirm_password_label = ctk.CTkLabel(
     form_frame,
     text="Confirm Password",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-confirm_password_label.grid(
-    row=4,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+confirm_password_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 confirm_password_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Confirm your password",
     show="*",
-    placeholder_text="Confirm password"
+    text_color=TEXT_COLOR
 )
 
-confirm_password_entry.grid(
-    row=4,
-    column=1,
-    padx=20,
-    pady=12
+confirm_password_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -493,28 +773,31 @@ confirm_password_entry.grid(
 dob_label = ctk.CTkLabel(
     form_frame,
     text="Date of Birth",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-dob_label.grid(
-    row=5,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+dob_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 dob_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
-    placeholder_text="DD-MM-YYYY"
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="DD-MM-YYYY",
+    text_color=TEXT_COLOR
 )
 
-dob_entry.grid(
-    row=5,
-    column=1,
-    padx=20,
-    pady=12
+dob_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -525,28 +808,31 @@ dob_entry.grid(
 income_label = ctk.CTkLabel(
     form_frame,
     text="Monthly Income",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-income_label.grid(
-    row=6,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+income_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 income_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
-    placeholder_text="Enter monthly income"
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Enter monthly income",
+    text_color=TEXT_COLOR
 )
 
-income_entry.grid(
-    row=6,
-    column=1,
-    padx=20,
-    pady=12
+income_entry.pack(
+    fill="x",
+    pady=(0, 9)
 )
 
 
@@ -557,56 +843,97 @@ income_entry.grid(
 savings_label = ctk.CTkLabel(
     form_frame,
     text="Monthly Savings",
-    font=("Arial", 16)
+    font=("Arial", 13, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-savings_label.grid(
-    row=7,
-    column=0,
-    padx=20,
-    pady=12,
-    sticky="w"
+savings_label.pack(
+    fill="x",
+    pady=(5, 4)
 )
+
 
 savings_entry = ctk.CTkEntry(
     form_frame,
-    width=250,
-    placeholder_text="Enter monthly savings"
+    height=38,
+    corner_radius=8,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    placeholder_text="Enter monthly savings",
+    text_color=TEXT_COLOR
 )
 
-savings_entry.grid(
-    row=7,
-    column=1,
-    padx=20,
-    pady=12
+savings_entry.pack(
+    fill="x",
+    pady=(0, 14)
 )
 
 
 # =========================================================
-# REGISTER BUTTON
+# CREATE ACCOUNT BUTTON
 # =========================================================
 
 register_button = ctk.CTkButton(
     form_frame,
-    text="Register",
-    width=180,
-    height=40,
+    text="Create Account",
+    height=42,
+    corner_radius=8,
+    fg_color=ACCENT_COLOR,
+    hover_color=ACCENT_HOVER,
+    font=("Arial", 14, "bold"),
     command=register_user
 )
 
-register_button.grid(
-    row=8,
-    column=0,
-    columnspan=2,
-    pady=25
+register_button.pack(
+    fill="x",
+    pady=(2, 10)
 )
 
 
 # =========================================================
-# START
+# LOGIN BUTTON
+# =========================================================
+
+login_button = ctk.CTkButton(
+    form_frame,
+    text="Already have an account?  Login",
+    height=36,
+    corner_radius=8,
+    fg_color="transparent",
+    hover_color=INPUT_COLOR,
+    border_width=1,
+    border_color=BORDER_COLOR,
+    text_color=SECONDARY_TEXT,
+    font=("Arial", 12),
+    command=go_to_login
+)
+
+login_button.pack(
+    fill="x",
+    pady=(0, 15)
+)
+
+
+# =========================================================
+# KEYBOARD SUPPORT
+# =========================================================
+
+app.bind(
+    "<Return>",
+    lambda event: register_user()
+)
+
+
+# =========================================================
+# START APPLICATION
 # =========================================================
 
 if __name__ == "__main__":
+
     print("REGISTER WINDOW STARTED")
+
     app.mainloop()
+
     print("REGISTER WINDOW CLOSED")

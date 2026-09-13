@@ -6,23 +6,45 @@ from database.db_connection import connect_db
 from ui.navigation import open_register, open_dashboard
 
 
-# ---------------- APPEARANCE ----------------
+# =========================================================
+# APPEARANCE
+# =========================================================
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
-# ---------------- LOGIN FUNCTION ----------------
+# =========================================================
+# COLORS
+# =========================================================
+
+BG_COLOR = "#0B1120"
+CARD_COLOR = "#111827"
+INPUT_COLOR = "#1F2937"
+TEXT_COLOR = "#F9FAFB"
+SECONDARY_TEXT = "#9CA3AF"
+ACCENT_COLOR = "#2563EB"
+ACCENT_HOVER = "#1D4ED8"
+BORDER_COLOR = "#374151"
+
+
+# =========================================================
+# LOGIN FUNCTION
+# =========================================================
 
 def login_user():
 
     user = user_entry.get().strip()
     password = password_entry.get()
 
+    # -----------------------------------------------------
+    # VALIDATION
+    # -----------------------------------------------------
+
     if user == "" or password == "":
         messagebox.showerror(
-            "Error",
-            "Please fill all fields!"
+            "Missing Information",
+            "Please fill in all fields."
         )
         return
 
@@ -35,12 +57,16 @@ def login_user():
 
         if connection is None:
             messagebox.showerror(
-                "Error",
+                "Database Error",
                 "Database connection failed!"
             )
             return
 
         cursor = connection.cursor()
+
+        # -------------------------------------------------
+        # FIND USER
+        # -------------------------------------------------
 
         query = """
         SELECT
@@ -60,46 +86,53 @@ def login_user():
         result = cursor.fetchone()
 
         if result is None:
+
             messagebox.showerror(
                 "Login Failed",
-                "User not found!"
+                "No account found with this email or phone number."
             )
+
             return
 
         user_id = result[0]
         full_name = result[1]
         stored_password = result[2]
 
-        # Convert stored password hash to bytes
+        # -------------------------------------------------
+        # PASSWORD HASH
+        # -------------------------------------------------
+
         if isinstance(stored_password, str):
             stored_password = stored_password.encode("utf-8")
 
-        # Verify password
+        # -------------------------------------------------
+        # VERIFY PASSWORD
+        # -------------------------------------------------
+
         if bcrypt.checkpw(
             password.encode("utf-8"),
             stored_password
         ):
 
-            messagebox.showinfo(
-                "Success",
-                f"Welcome {full_name}!"
-            )
-
             print("LOGIN SUCCESS")
             print("USER ID:", user_id)
 
+            messagebox.showinfo(
+                "Login Successful",
+                f"Welcome back, {full_name}! 👋"
+            )
+
+            # Open dashboard first
             open_dashboard(user_id)
-            app.destroy()
 
-            print("DASHBOARD COMMAND SENT")
-
+            # Destroy login window
             app.destroy()
 
         else:
 
             messagebox.showerror(
                 "Login Failed",
-                "Incorrect Password!"
+                "Incorrect password. Please try again."
             )
 
     except Exception as e:
@@ -108,7 +141,7 @@ def login_user():
 
         messagebox.showerror(
             "Login Error",
-            repr(e)
+            f"Something went wrong:\n\n{e}"
         )
 
     finally:
@@ -120,156 +153,411 @@ def login_user():
             connection.close()
 
 
-# ---------------- REGISTER BUTTON ----------------
+# =========================================================
+# GO TO REGISTER
+# =========================================================
 
 def go_to_register():
+    print("CREATE ACCOUNT CLICKED")
     open_register()
 
 
-# ---------------- OPEN LOGIN ----------------
+# =========================================================
+# OPEN LOGIN
+# =========================================================
 
 def open_login():
 
     app.mainloop()
 
 
-# ---------------- APPLICATION ----------------
+# =========================================================
+# APPLICATION WINDOW
+# =========================================================
 
 app = ctk.CTk()
 
 app.title(
-    "LLM-Based Conversational Financial Advisor"
+    "FinVest AI - Login"
 )
 
-app.geometry("700x500")
+app.geometry(
+    "1000x650"
+)
+
+app.configure(
+    fg_color=BG_COLOR
+)
+
+app.resizable(
+    False,
+    False
+)
 
 
-# ---------------- TITLE ----------------
+# =========================================================
+# MAIN CONTAINER
+# =========================================================
 
-title = ctk.CTkLabel(
+main_frame = ctk.CTkFrame(
     app,
-    text="Welcome Back",
-    font=("Arial", 28, "bold")
+    fg_color=BG_COLOR
 )
 
-title.pack(pady=30)
-
-
-# ---------------- LOGIN FRAME ----------------
-
-login_frame = ctk.CTkFrame(
-    app,
-    width=450,
-    height=250
-)
-
-login_frame.pack(pady=20)
-
-login_frame.pack_propagate(False)
-
-
-# ---------------- USER LABEL ----------------
-
-user_label = ctk.CTkLabel(
-    login_frame,
-    text="Email / Phone Number",
-    font=("Arial", 16)
-)
-
-user_label.grid(
-    row=0,
-    column=0,
-    padx=20,
-    pady=20,
-    sticky="w"
+main_frame.pack(
+    fill="both",
+    expand=True
 )
 
 
-# ---------------- USER ENTRY ----------------
+# =========================================================
+# LEFT SIDE - BRANDING
+# =========================================================
 
-user_entry = ctk.CTkEntry(
-    login_frame,
-    width=250,
-    placeholder_text="Enter email or phone number"
+left_frame = ctk.CTkFrame(
+    main_frame,
+    width=470,
+    fg_color=BG_COLOR
 )
 
-user_entry.grid(
-    row=0,
-    column=1,
-    padx=20,
-    pady=20
+left_frame.pack(
+    side="left",
+    fill="both",
+    expand=True,
+    padx=(45, 20),
+    pady=45
 )
 
+left_frame.pack_propagate(False)
 
-# ---------------- PASSWORD LABEL ----------------
 
-password_label = ctk.CTkLabel(
-    login_frame,
-    text="Password",
-    font=("Arial", 16)
+# ---------------------------------------------------------
+# LOGO
+# ---------------------------------------------------------
+
+logo = ctk.CTkLabel(
+    left_frame,
+    text="💰",
+    font=("Arial", 55)
 )
 
-password_label.grid(
-    row=1,
-    column=0,
-    padx=20,
-    pady=20,
-    sticky="w"
-)
-
-
-# ---------------- PASSWORD ENTRY ----------------
-
-password_entry = ctk.CTkEntry(
-    login_frame,
-    width=250,
-    show="*",
-    placeholder_text="Enter password"
-)
-
-password_entry.grid(
-    row=1,
-    column=1,
-    padx=20,
-    pady=20
+logo.pack(
+    pady=(70, 10)
 )
 
 
-# ---------------- LOGIN BUTTON ----------------
+# ---------------------------------------------------------
+# APP NAME
+# ---------------------------------------------------------
 
-login_button = ctk.CTkButton(
-    login_frame,
-    text="Login",
-    width=180,
-    command=login_user
+brand_title = ctk.CTkLabel(
+    left_frame,
+    text="FinVest AI",
+    font=("Arial", 34, "bold"),
+    text_color=TEXT_COLOR
 )
 
-login_button.grid(
-    row=2,
-    column=0,
-    columnspan=2,
+brand_title.pack(
+    pady=(0, 8)
+)
+
+
+# ---------------------------------------------------------
+# TAGLINE
+# ---------------------------------------------------------
+
+brand_subtitle = ctk.CTkLabel(
+    left_frame,
+    text="Your Personal Financial Assistant",
+    font=("Arial", 17),
+    text_color=SECONDARY_TEXT
+)
+
+brand_subtitle.pack(
+    pady=5
+)
+
+
+# ---------------------------------------------------------
+# DESCRIPTION
+# ---------------------------------------------------------
+
+description = ctk.CTkLabel(
+    left_frame,
+    text=(
+        "Track your expenses,\n"
+        "manage your financial goals,\n"
+        "and get AI-powered financial guidance."
+    ),
+    font=("Arial", 15),
+    text_color=SECONDARY_TEXT,
+    justify="center"
+)
+
+description.pack(
     pady=30
 )
 
 
-# ---------------- REGISTER BUTTON ----------------
+# ---------------------------------------------------------
+# FEATURES
+# ---------------------------------------------------------
 
-register_button = ctk.CTkButton(
-    login_frame,
-    text="Create New Account",
-    width=180,
-    command=go_to_register
+features = ctk.CTkLabel(
+    left_frame,
+    text=(
+        "✓ Expense Tracking\n"
+        "✓ Investment Goals\n"
+        "✓ Financial Analytics\n"
+        "✓ AI Financial Advisor"
+    ),
+    font=("Arial", 14),
+    text_color=TEXT_COLOR,
+    justify="left"
 )
 
-register_button.grid(
-    row=3,
-    column=0,
-    columnspan=2,
+features.pack(
     pady=10
 )
 
 
-# ---------------- START LOGIN ----------------
+# =========================================================
+# RIGHT SIDE - LOGIN CARD
+# =========================================================
+
+card = ctk.CTkFrame(
+    main_frame,
+    width=430,
+    height=500,
+    fg_color=CARD_COLOR,
+    corner_radius=20,
+    border_width=1,
+    border_color=BORDER_COLOR
+)
+
+card.pack(
+    side="right",
+    padx=(20, 55),
+    pady=75
+)
+
+card.pack_propagate(False)
+
+
+# =========================================================
+# LOGIN TITLE
+# =========================================================
+
+login_title = ctk.CTkLabel(
+    card,
+    text="Welcome Back 👋",
+    font=("Arial", 27, "bold"),
+    text_color=TEXT_COLOR
+)
+
+login_title.pack(
+    pady=(38, 5)
+)
+
+
+# =========================================================
+# LOGIN SUBTITLE
+# =========================================================
+
+login_subtitle = ctk.CTkLabel(
+    card,
+    text="Login to continue to your financial dashboard",
+    font=("Arial", 13),
+    text_color=SECONDARY_TEXT
+)
+
+login_subtitle.pack(
+    pady=(0, 28)
+)
+
+
+# =========================================================
+# USER LABEL
+# =========================================================
+
+user_label = ctk.CTkLabel(
+    card,
+    text="Email or Phone Number",
+    font=("Arial", 14, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+user_label.pack(
+    fill="x",
+    padx=45,
+    pady=(0, 7)
+)
+
+
+# =========================================================
+# USER ENTRY
+# =========================================================
+
+user_entry = ctk.CTkEntry(
+    card,
+    width=330,
+    height=45,
+    corner_radius=10,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    text_color=TEXT_COLOR,
+    placeholder_text="Enter email or phone number",
+    placeholder_text_color="#6B7280",
+    font=("Arial", 13)
+)
+
+user_entry.pack(
+    padx=45,
+    pady=(0, 20)
+)
+
+
+# =========================================================
+# PASSWORD LABEL
+# =========================================================
+
+password_label = ctk.CTkLabel(
+    card,
+    text="Password",
+    font=("Arial", 14, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+password_label.pack(
+    fill="x",
+    padx=45,
+    pady=(0, 7)
+)
+
+
+# =========================================================
+# PASSWORD ENTRY
+# =========================================================
+
+password_entry = ctk.CTkEntry(
+    card,
+    width=330,
+    height=45,
+    corner_radius=10,
+    fg_color=INPUT_COLOR,
+    border_color=BORDER_COLOR,
+    border_width=1,
+    text_color=TEXT_COLOR,
+    placeholder_text="Enter your password",
+    placeholder_text_color="#6B7280",
+    show="*",
+    font=("Arial", 13)
+)
+
+password_entry.pack(
+    padx=45,
+    pady=(0, 25)
+)
+
+
+# =========================================================
+# LOGIN BUTTON
+# =========================================================
+
+login_button = ctk.CTkButton(
+    card,
+    text="Login →",
+    width=330,
+    height=46,
+    corner_radius=10,
+    fg_color=ACCENT_COLOR,
+    hover_color=ACCENT_HOVER,
+    text_color="white",
+    font=("Arial", 15, "bold"),
+    command=login_user
+)
+
+login_button.pack(
+    padx=45,
+    pady=5
+)
+
+
+# =========================================================
+# DIVIDER TEXT
+# =========================================================
+
+account_label = ctk.CTkLabel(
+    card,
+    text="Don't have an account?",
+    font=("Arial", 13),
+    text_color=SECONDARY_TEXT
+)
+
+account_label.pack(
+    pady=(28, 5)
+)
+
+
+# =========================================================
+# CREATE ACCOUNT BUTTON
+# =========================================================
+
+register_button = ctk.CTkButton(
+    card,
+    text="Create New Account",
+    width=330,
+    height=42,
+    corner_radius=10,
+    fg_color="transparent",
+    hover_color=INPUT_COLOR,
+    border_width=1,
+    border_color=ACCENT_COLOR,
+    text_color="#60A5FA",
+    font=("Arial", 14, "bold"),
+    command=go_to_register
+)
+
+register_button.pack(
+    padx=45,
+    pady=5
+)
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+footer = ctk.CTkLabel(
+    app,
+    text="Secure • Smart • Personalized Financial Planning",
+    font=("Arial", 11),
+    text_color="#6B7280"
+)
+
+footer.place(
+    relx=0.5,
+    rely=0.965,
+    anchor="center"
+)
+
+
+# =========================================================
+# ENTER KEY LOGIN
+# =========================================================
+
+app.bind(
+    "<Return>",
+    lambda event: login_user()
+)
+
+
+# =========================================================
+# START APPLICATION
+# =========================================================
 
 if __name__ == "__main__":
     open_login()

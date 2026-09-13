@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import sys
 from tkinter import messagebox
+
 from database.db_connection import connect_db
 from ui.navigation import open_dashboard
 
@@ -8,7 +9,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-# ---------------- USER ID ----------------
+# =========================================================
+# USER ID
+# =========================================================
 
 if len(sys.argv) > 1:
     user_id = int(sys.argv[1])
@@ -16,120 +19,574 @@ else:
     user_id = 1
 
 
-# ---------------- APPEARANCE ----------------
+# =========================================================
+# APPEARANCE
+# =========================================================
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
-# ---------------- APP ----------------
+# =========================================================
+# COLORS
+# =========================================================
+
+BG_COLOR = "#0B1120"
+CARD_COLOR = "#111827"
+INPUT_COLOR = "#1F2937"
+
+TEXT_COLOR = "#F9FAFB"
+SECONDARY_TEXT = "#9CA3AF"
+
+ACCENT_COLOR = "#2563EB"
+ACCENT_HOVER = "#1D4ED8"
+
+BORDER_COLOR = "#374151"
+
+SUCCESS_COLOR = "#22C55E"
+WARNING_COLOR = "#F59E0B"
+DANGER_COLOR = "#EF4444"
+
+
+# =========================================================
+# APP
+# =========================================================
 
 app = ctk.CTk()
-app.title("Analytics")
-app.geometry("1100x750")
+
+app.title("Financial Analytics")
+app.geometry("1200x800")
+app.minsize(850, 600)
+
+app.configure(
+    fg_color=BG_COLOR
+)
 
 
-# ---------------- TITLE ----------------
+# =========================================================
+# MAIN SCROLLABLE CONTAINER
+# =========================================================
+
+main_scroll = ctk.CTkScrollableFrame(
+    app,
+    fg_color=BG_COLOR,
+    scrollbar_fg_color=BG_COLOR,
+    scrollbar_button_color=BORDER_COLOR,
+    scrollbar_button_hover_color=ACCENT_COLOR
+)
+
+main_scroll.pack(
+    fill="both",
+    expand=True,
+    padx=0,
+    pady=0
+)
+
+
+# =========================================================
+# HEADER
+# =========================================================
+
+header_frame = ctk.CTkFrame(
+    main_scroll,
+    fg_color="transparent"
+)
+
+header_frame.pack(
+    fill="x",
+    padx=35,
+    pady=(25, 10)
+)
+
+
+# ---------------------------------------------------------
+# TITLE
+# ---------------------------------------------------------
 
 title = ctk.CTkLabel(
-    app,
-    text="Analytics",
-    font=("Arial", 28, "bold")
+    header_frame,
+    text="Financial Analytics",
+    font=("Arial", 30, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
 )
 
-title.pack(pady=20)
+title.pack(
+    anchor="w"
+)
 
 
-# ---------------- SUMMARY FRAME ----------------
+# ---------------------------------------------------------
+# SUBTITLE
+# ---------------------------------------------------------
+
+subtitle = ctk.CTkLabel(
+    header_frame,
+    text="Understand your spending patterns and financial position",
+    font=("Arial", 14),
+    text_color=SECONDARY_TEXT,
+    anchor="w"
+)
+
+subtitle.pack(
+    anchor="w",
+    pady=(4, 0)
+)
+
+
+# =========================================================
+# SUMMARY CARDS
+# =========================================================
 
 summary_frame = ctk.CTkFrame(
-    app,
-    width=1000,
-    height=120
+    main_scroll,
+    fg_color="transparent"
 )
 
-summary_frame.pack(pady=10)
-summary_frame.pack_propagate(False)
+summary_frame.pack(
+    fill="x",
+    padx=35,
+    pady=15
+)
 
 
-# ---------------- INCOME ----------------
+summary_frame.grid_columnconfigure(
+    0,
+    weight=1
+)
 
-income_label = ctk.CTkLabel(
+summary_frame.grid_columnconfigure(
+    1,
+    weight=1
+)
+
+summary_frame.grid_columnconfigure(
+    2,
+    weight=1
+)
+
+
+# =========================================================
+# CARD CREATOR
+# =========================================================
+
+def create_summary_card(
+    parent,
+    title_text,
+    value_text,
+    subtitle_text,
+    column
+):
+
+    card = ctk.CTkFrame(
+        parent,
+        fg_color=CARD_COLOR,
+        corner_radius=16,
+        border_width=1,
+        border_color=BORDER_COLOR,
+        height=135
+    )
+
+    card.grid(
+        row=0,
+        column=column,
+        sticky="nsew",
+        padx=7
+    )
+
+    card.grid_propagate(False)
+
+    # Title
+    label_title = ctk.CTkLabel(
+        card,
+        text=title_text,
+        font=("Arial", 13),
+        text_color=SECONDARY_TEXT,
+        anchor="w"
+    )
+
+    label_title.pack(
+        anchor="w",
+        padx=20,
+        pady=(18, 4)
+    )
+
+    # Value
+    label_value = ctk.CTkLabel(
+        card,
+        text=value_text,
+        font=("Arial", 25, "bold"),
+        text_color=TEXT_COLOR,
+        anchor="w"
+    )
+
+    label_value.pack(
+        anchor="w",
+        padx=20
+    )
+
+    # Subtitle
+    label_subtitle = ctk.CTkLabel(
+        card,
+        text=subtitle_text,
+        font=("Arial", 11),
+        text_color=SECONDARY_TEXT,
+        anchor="w"
+    )
+
+    label_subtitle.pack(
+        anchor="w",
+        padx=20,
+        pady=(3, 0)
+    )
+
+    return card, label_value
+
+
+# =========================================================
+# SUMMARY CARDS
+# =========================================================
+
+income_card, income_label = create_summary_card(
     summary_frame,
-    text="Monthly Income\n₹0",
-    font=("Arial", 18, "bold")
+    "MONTHLY INCOME",
+    "₹0",
+    "Your registered monthly income",
+    0
 )
 
-income_label.grid(
+
+expense_card, expense_label = create_summary_card(
+    summary_frame,
+    "TOTAL EXPENSES",
+    "₹0",
+    "Total recorded expenses",
+    1
+)
+
+
+balance_card, balance_label = create_summary_card(
+    summary_frame,
+    "REMAINING BALANCE",
+    "₹0",
+    "Income minus recorded expenses",
+    2
+)
+
+
+# =========================================================
+# CHART SECTION
+# =========================================================
+
+charts_title = ctk.CTkLabel(
+    main_scroll,
+    text="Spending Overview",
+    font=("Arial", 21, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+charts_title.pack(
+    anchor="w",
+    padx=35,
+    pady=(15, 8)
+)
+
+
+charts_frame = ctk.CTkFrame(
+    main_scroll,
+    fg_color="transparent"
+)
+
+charts_frame.pack(
+    fill="x",
+    padx=28,
+    pady=5
+)
+
+
+charts_frame.grid_columnconfigure(
+    0,
+    weight=1
+)
+
+charts_frame.grid_columnconfigure(
+    1,
+    weight=1
+)
+
+
+# =========================================================
+# PIE CHART CARD
+# =========================================================
+
+pie_card = ctk.CTkFrame(
+    charts_frame,
+    fg_color=CARD_COLOR,
+    corner_radius=16,
+    border_width=1,
+    border_color=BORDER_COLOR,
+    height=430
+)
+
+pie_card.grid(
     row=0,
     column=0,
-    padx=50,
-    pady=30
+    sticky="nsew",
+    padx=7
+)
+
+pie_card.grid_propagate(False)
+
+
+pie_title = ctk.CTkLabel(
+    pie_card,
+    text="Expense Distribution",
+    font=("Arial", 18, "bold"),
+    text_color=TEXT_COLOR
+)
+
+pie_title.pack(
+    anchor="w",
+    padx=20,
+    pady=(15, 0)
 )
 
 
-# ---------------- EXPENSE ----------------
-
-expense_label = ctk.CTkLabel(
-    summary_frame,
-    text="Total Expenses\n₹0",
-    font=("Arial", 18, "bold")
+pie_subtitle = ctk.CTkLabel(
+    pie_card,
+    text="Where your money is being spent",
+    font=("Arial", 11),
+    text_color=SECONDARY_TEXT
 )
 
-expense_label.grid(
+pie_subtitle.pack(
+    anchor="w",
+    padx=20,
+    pady=(2, 5)
+)
+
+
+pie_chart_frame = ctk.CTkFrame(
+    pie_card,
+    fg_color="transparent"
+)
+
+pie_chart_frame.pack(
+    fill="both",
+    expand=True,
+    padx=10,
+    pady=5
+)
+
+
+# =========================================================
+# TREND CHART CARD
+# =========================================================
+
+trend_card = ctk.CTkFrame(
+    charts_frame,
+    fg_color=CARD_COLOR,
+    corner_radius=16,
+    border_width=1,
+    border_color=BORDER_COLOR,
+    height=430
+)
+
+trend_card.grid(
     row=0,
     column=1,
-    padx=50,
-    pady=30
+    sticky="nsew",
+    padx=7
+)
+
+trend_card.grid_propagate(False)
+
+
+trend_title = ctk.CTkLabel(
+    trend_card,
+    text="Monthly Expense Trend",
+    font=("Arial", 18, "bold"),
+    text_color=TEXT_COLOR
+)
+
+trend_title.pack(
+    anchor="w",
+    padx=20,
+    pady=(15, 0)
 )
 
 
-# ---------------- BALANCE ----------------
-
-balance_label = ctk.CTkLabel(
-    summary_frame,
-    text="Remaining Balance\n₹0",
-    font=("Arial", 18, "bold")
+trend_subtitle = ctk.CTkLabel(
+    trend_card,
+    text="Track how your expenses change over time",
+    font=("Arial", 11),
+    text_color=SECONDARY_TEXT
 )
 
-balance_label.grid(
-    row=0,
-    column=2,
-    padx=50,
-    pady=30
+trend_subtitle.pack(
+    anchor="w",
+    padx=20,
+    pady=(2, 5)
 )
 
 
-# ---------------- CHART FRAME ----------------
-
-chart_frame = ctk.CTkFrame(
-    app,
-    width=1000,
-    height=450
+trend_chart_frame = ctk.CTkFrame(
+    trend_card,
+    fg_color="transparent"
 )
 
-chart_frame.pack(pady=20)
-chart_frame.pack_propagate(False)
+trend_chart_frame.pack(
+    fill="both",
+    expand=True,
+    padx=10,
+    pady=5
+)
 
 
-# ---------------- CREATE CHARTS ----------------
+# =========================================================
+# INSIGHTS SECTION
+# =========================================================
+
+insights_title = ctk.CTkLabel(
+    main_scroll,
+    text="Financial Insights",
+    font=("Arial", 21, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+insights_title.pack(
+    anchor="w",
+    padx=35,
+    pady=(20, 8)
+)
+
+
+insights_card = ctk.CTkFrame(
+    main_scroll,
+    fg_color=CARD_COLOR,
+    corner_radius=16,
+    border_width=1,
+    border_color=BORDER_COLOR
+)
+
+insights_card.pack(
+    fill="x",
+    padx=35,
+    pady=5
+)
+
+
+insights_content = ctk.CTkFrame(
+    insights_card,
+    fg_color="transparent"
+)
+
+insights_content.pack(
+    fill="x",
+    padx=20,
+    pady=18
+)
+
+
+# =========================================================
+# INSIGHT LABELS
+# =========================================================
+
+expense_ratio_label = ctk.CTkLabel(
+    insights_content,
+    text="Expense Ratio: 0%",
+    font=("Arial", 14, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+expense_ratio_label.pack(
+    anchor="w",
+    pady=5
+)
+
+
+highest_category_label = ctk.CTkLabel(
+    insights_content,
+    text="Highest Spending Category: No data",
+    font=("Arial", 14, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+highest_category_label.pack(
+    anchor="w",
+    pady=5
+)
+
+
+spending_status_label = ctk.CTkLabel(
+    insights_content,
+    text="Spending Status: No data",
+    font=("Arial", 14, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+spending_status_label.pack(
+    anchor="w",
+    pady=5
+)
+
+
+balance_status_label = ctk.CTkLabel(
+    insights_content,
+    text="Balance Status: No data",
+    font=("Arial", 14, "bold"),
+    text_color=TEXT_COLOR,
+    anchor="w"
+)
+
+balance_status_label.pack(
+    anchor="w",
+    pady=5
+)
+
+
+# =========================================================
+# CHART FUNCTIONS
+# =========================================================
 
 def create_charts(category_data, monthly_data):
 
-    # Remove previous charts
-    for widget in chart_frame.winfo_children():
+    # -----------------------------------------------------
+    # REMOVE OLD CHARTS
+    # -----------------------------------------------------
+
+    for widget in pie_chart_frame.winfo_children():
         widget.destroy()
 
+    for widget in trend_chart_frame.winfo_children():
+        widget.destroy()
+
+
+    # -----------------------------------------------------
+    # MATPLOTLIB DARK BACKGROUND
+    # -----------------------------------------------------
+
     figure = plt.Figure(
-        figsize=(10, 4.2)
+        figsize=(9, 3.6),
+        dpi=100
     )
 
+    figure.patch.set_facecolor(CARD_COLOR)
 
-    # ==================================================
-    # PIE CHART
-    # ==================================================
 
-    pie_axis = figure.add_subplot(121)
+    # =====================================================
+    # PIE / DONUT CHART
+    # =====================================================
+
+    pie_axis = figure.add_subplot(111)
+
+    pie_axis.set_facecolor(CARD_COLOR)
+
 
     if len(category_data) > 0:
 
@@ -138,18 +595,38 @@ def create_charts(category_data, monthly_data):
 
         for row in category_data:
 
-            categories.append(row[0])
-            amounts.append(float(row[1]))
+            categories.append(
+                str(row[0])
+            )
+
+            amounts.append(
+                float(row[1])
+            )
+
 
         pie_axis.pie(
             amounts,
             labels=categories,
-            autopct="%1.1f%%"
+            autopct="%1.1f%%",
+            startangle=90,
+            pctdistance=0.78,
+            wedgeprops={
+                "width": 0.42,
+                "edgecolor": CARD_COLOR
+            },
+            textprops={
+                "color": TEXT_COLOR,
+                "fontsize": 9
+            }
         )
 
         pie_axis.set_title(
-            "Expense By Category"
+            "Expense By Category",
+            color=TEXT_COLOR,
+            fontsize=13,
+            pad=8
         )
+
 
     else:
 
@@ -158,19 +635,52 @@ def create_charts(category_data, monthly_data):
             0.5,
             "No Expense Data",
             ha="center",
-            va="center"
+            va="center",
+            color=TEXT_COLOR,
+            fontsize=13
         )
 
         pie_axis.set_title(
-            "Expense By Category"
+            "Expense By Category",
+            color=TEXT_COLOR,
+            fontsize=13
         )
 
 
-    # ==================================================
-    # MONTHLY TREND
-    # ==================================================
+    pie_axis.axis("equal")
 
-    trend_axis = figure.add_subplot(122)
+
+    figure.tight_layout()
+
+
+    pie_canvas = FigureCanvasTkAgg(
+        figure,
+        master=pie_chart_frame
+    )
+
+    pie_canvas.draw()
+
+    pie_canvas.get_tk_widget().pack(
+        fill="both",
+        expand=True
+    )
+
+
+    # =====================================================
+    # MONTHLY TREND
+    # =====================================================
+
+    trend_figure = plt.Figure(
+        figsize=(9, 3.6),
+        dpi=100
+    )
+
+    trend_figure.patch.set_facecolor(CARD_COLOR)
+
+    trend_axis = trend_figure.add_subplot(111)
+
+    trend_axis.set_facecolor(CARD_COLOR)
+
 
     if len(monthly_data) > 0:
 
@@ -179,31 +689,117 @@ def create_charts(category_data, monthly_data):
 
         for row in monthly_data:
 
-            months.append(row[0])
-            amounts.append(float(row[1]))
+            months.append(
+                str(row[0])
+            )
+
+            amounts.append(
+                float(row[1])
+            )
+
+
+        x_positions = list(
+            range(len(months))
+        )
+
+
+        # -------------------------------------------------
+        # AREA
+        # -------------------------------------------------
+
+        trend_axis.fill_between(
+            x_positions,
+            amounts,
+            alpha=0.25
+        )
+
+
+        # -------------------------------------------------
+        # LINE
+        # -------------------------------------------------
 
         trend_axis.plot(
-            months,
+            x_positions,
             amounts,
-            marker="o"
+            marker="o",
+            linewidth=2
         )
 
-        trend_axis.set_title(
-            "Monthly Expense Trend"
+
+        # -------------------------------------------------
+        # X AXIS
+        # -------------------------------------------------
+
+        trend_axis.set_xticks(
+            x_positions
         )
+
+        trend_axis.set_xticklabels(
+            months,
+            rotation=45,
+            ha="right"
+        )
+
+
+        # -------------------------------------------------
+        # LABELS
+        # -------------------------------------------------
 
         trend_axis.set_xlabel(
-            "Month"
+            "Month",
+            color=TEXT_COLOR
         )
 
         trend_axis.set_ylabel(
-            "Expense"
+            "Expense (₹)",
+            color=TEXT_COLOR
         )
+
+
+        trend_axis.set_title(
+            "Monthly Expense Trend",
+            color=TEXT_COLOR,
+            fontsize=13
+        )
+
+
+        # -------------------------------------------------
+        # TICKS
+        # -------------------------------------------------
 
         trend_axis.tick_params(
             axis="x",
-            rotation=45
+            colors=TEXT_COLOR
         )
+
+        trend_axis.tick_params(
+            axis="y",
+            colors=TEXT_COLOR
+        )
+
+
+        # -------------------------------------------------
+        # GRID
+        # -------------------------------------------------
+
+        trend_axis.grid(
+            axis="y",
+            alpha=0.2
+        )
+
+
+        # -------------------------------------------------
+        # SPINES
+        # -------------------------------------------------
+
+        trend_axis.spines[
+            "top"
+        ].set_visible(False)
+
+        trend_axis.spines[
+            "right"
+        ].set_visible(False)
+
 
     else:
 
@@ -212,33 +808,37 @@ def create_charts(category_data, monthly_data):
             0.5,
             "No Expense Data",
             ha="center",
-            va="center"
+            va="center",
+            color=TEXT_COLOR,
+            fontsize=13
         )
 
         trend_axis.set_title(
-            "Monthly Expense Trend"
+            "Monthly Expense Trend",
+            color=TEXT_COLOR,
+            fontsize=13
         )
 
 
-    figure.tight_layout()
+    trend_figure.tight_layout()
 
 
-    # ---------------- DISPLAY CHART ----------------
-
-    canvas = FigureCanvasTkAgg(
-        figure,
-        master=chart_frame
+    trend_canvas = FigureCanvasTkAgg(
+        trend_figure,
+        master=trend_chart_frame
     )
 
-    canvas.draw()
+    trend_canvas.draw()
 
-    canvas.get_tk_widget().pack(
+    trend_canvas.get_tk_widget().pack(
         fill="both",
         expand=True
     )
 
 
-# ---------------- LOAD ANALYTICS DATA ----------------
+# =========================================================
+# LOAD ANALYTICS DATA
+# =========================================================
 
 def load_analytics_data():
 
@@ -258,12 +858,13 @@ def load_analytics_data():
 
             return
 
+
         cursor = connection.cursor()
 
 
-        # ==================================================
+        # =================================================
         # MONTHLY INCOME
-        # ==================================================
+        # =================================================
 
         cursor.execute(
             """
@@ -276,6 +877,7 @@ def load_analytics_data():
 
         user_data = cursor.fetchone()
 
+
         if user_data is None:
 
             messagebox.showerror(
@@ -285,14 +887,15 @@ def load_analytics_data():
 
             return
 
+
         monthly_income = float(
             user_data[0]
         )
 
 
-        # ==================================================
+        # =================================================
         # TOTAL EXPENSES
-        # ==================================================
+        # =================================================
 
         cursor.execute(
             """
@@ -305,23 +908,25 @@ def load_analytics_data():
 
         expense_data = cursor.fetchone()
 
+
         total_expenses = float(
             expense_data[0]
         )
 
 
-        # ==================================================
+        # =================================================
         # REMAINING BALANCE
-        # ==================================================
+        # =================================================
 
         remaining_balance = (
-            monthly_income - total_expenses
+            monthly_income -
+            total_expenses
         )
 
 
-        # ==================================================
+        # =================================================
         # CATEGORY-WISE EXPENSES
-        # ==================================================
+        # =================================================
 
         cursor.execute(
             """
@@ -334,6 +939,7 @@ def load_analytics_data():
                    categories.category_id
             WHERE expenses.user_id = %s
             GROUP BY categories.category_name
+            ORDER BY SUM(expenses.amount) DESC
             """,
             (user_id,)
         )
@@ -341,9 +947,9 @@ def load_analytics_data():
         category_data = cursor.fetchall()
 
 
-        # ==================================================
+        # =================================================
         # MONTHLY EXPENSE DATA
-        # ==================================================
+        # =================================================
 
         cursor.execute(
             """
@@ -367,26 +973,143 @@ def load_analytics_data():
         monthly_data = cursor.fetchall()
 
 
-        # ==================================================
-        # UPDATE SUMMARY
-        # ==================================================
+        # =================================================
+        # UPDATE SUMMARY CARDS
+        # =================================================
 
         income_label.configure(
-            text=f"Monthly Income\n₹{monthly_income:,.2f}"
+            text=f"₹{monthly_income:,.2f}"
         )
+
 
         expense_label.configure(
-            text=f"Total Expenses\n₹{total_expenses:,.2f}"
+            text=f"₹{total_expenses:,.2f}"
         )
+
 
         balance_label.configure(
-            text=f"Remaining Balance\n₹{remaining_balance:,.2f}"
+            text=f"₹{remaining_balance:,.2f}"
         )
 
 
-        # ==================================================
+        # =================================================
+        # EXPENSE RATIO
+        # =================================================
+
+        if monthly_income > 0:
+
+            expense_ratio = (
+                total_expenses /
+                monthly_income
+            ) * 100
+
+        else:
+
+            expense_ratio = 0
+
+
+        expense_ratio_label.configure(
+            text=f"Expense Ratio: {expense_ratio:.1f}%"
+        )
+
+
+        # =================================================
+        # HIGHEST CATEGORY
+        # =================================================
+
+        if len(category_data) > 0:
+
+            highest_category = category_data[0][0]
+            highest_amount = float(
+                category_data[0][1]
+            )
+
+            highest_category_label.configure(
+                text=(
+                    f"Highest Spending Category: "
+                    f"{highest_category} "
+                    f"(₹{highest_amount:,.2f})"
+                )
+            )
+
+        else:
+
+            highest_category_label.configure(
+                text="Highest Spending Category: No data"
+            )
+
+
+        # =================================================
+        # SPENDING STATUS
+        # =================================================
+
+        if expense_ratio <= 50:
+
+            spending_status = "Healthy"
+            spending_color = SUCCESS_COLOR
+
+        elif expense_ratio <= 70:
+
+            spending_status = "Moderate"
+            spending_color = WARNING_COLOR
+
+        elif expense_ratio <= 90:
+
+            spending_status = "High"
+            spending_color = WARNING_COLOR
+
+        else:
+
+            spending_status = "Very High"
+            spending_color = DANGER_COLOR
+
+
+        spending_status_label.configure(
+            text=f"Spending Status: {spending_status}",
+            text_color=spending_color
+        )
+
+
+        # =================================================
+        # BALANCE STATUS
+        # =================================================
+
+        if remaining_balance > 0:
+
+            balance_status = (
+                f"Positive balance of "
+                f"₹{remaining_balance:,.2f}"
+            )
+
+            balance_color = SUCCESS_COLOR
+
+        elif remaining_balance == 0:
+
+            balance_status = (
+                "No remaining balance"
+            )
+
+            balance_color = WARNING_COLOR
+
+        else:
+
+            balance_status = (
+                f"Expenses exceed income by "
+                f"₹{abs(remaining_balance):,.2f}"
+            )
+
+            balance_color = DANGER_COLOR
+
+
+        balance_status_label.configure(
+            text=f"Balance Status: {balance_status}",
+            text_color=balance_color
+        )
+
+
+        # =================================================
         # CREATE CHARTS
-        # ==================================================
+        # =================================================
 
         create_charts(
             category_data,
@@ -403,7 +1126,7 @@ def load_analytics_data():
 
         messagebox.showerror(
             "Analytics Error",
-            repr(e)
+            f"Something went wrong:\n{e}"
         )
 
 
@@ -416,7 +1139,42 @@ def load_analytics_data():
             connection.close()
 
 
-# ---------------- BACK BUTTON ----------------
+# =========================================================
+# BOTTOM NAVIGATION
+# =========================================================
+
+bottom_frame = ctk.CTkFrame(
+    main_scroll,
+    fg_color="transparent"
+)
+
+bottom_frame.pack(
+    fill="x",
+    padx=35,
+    pady=(20, 30)
+)
+
+
+back_button = ctk.CTkButton(
+    bottom_frame,
+    text="←  Back to Dashboard",
+    width=220,
+    height=42,
+    corner_radius=9,
+    fg_color=ACCENT_COLOR,
+    hover_color=ACCENT_HOVER,
+    font=("Arial", 13, "bold"),
+    command=lambda: go_back()
+)
+
+back_button.pack(
+    anchor="e"
+)
+
+
+# =========================================================
+# BACK FUNCTION
+# =========================================================
 
 def go_back():
 
@@ -425,22 +1183,21 @@ def go_back():
     open_dashboard(user_id)
 
 
-back_button = ctk.CTkButton(
-    app,
-    text="Back",
-    width=180,
-    command=go_back
-)
-
-back_button.pack(pady=10)
-
-
-# ---------------- LOAD DATA ----------------
+# =========================================================
+# LOAD DATA
+# =========================================================
 
 load_analytics_data()
 
 
-# ---------------- START APPLICATION ----------------
+# =========================================================
+# START APPLICATION
+# =========================================================
 
 if __name__ == "__main__":
+
+    print("ANALYTICS WINDOW STARTED")
+
     app.mainloop()
+
+    print("ANALYTICS WINDOW CLOSED")
